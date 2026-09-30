@@ -1,4 +1,4 @@
-# InventoryMovil
+# Inventario movil
 
 Aplicación móvil de inventario construida con Ionic + Angular y Capacitor.
 
