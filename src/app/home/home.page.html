@@ -1,0 +1,22 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="end">
+      <ion-button (click)="confirmarSalir()" aria-label="Cerrar sesión">
+        <ion-icon slot="icon-only" name="log-out"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="welcome">
+    <h1>Bienvenido(a)</h1>
+    <p>{{ userName() }}</p>
+  </div>
+
+  <div class="modules-grid">
+    @for (module of modules(); track module.id) {
+      <app-module-button [module]="module" />
+    }
+  </div>
+</ion-content>

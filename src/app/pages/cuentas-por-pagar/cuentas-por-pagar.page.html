@@ -1,0 +1,165 @@
+<app-page-header title="Cuentas por Pagar" />
+
+<ion-content [fullscreen]="true">
+  <app-filtro-fecha [(fecha)]="fechaFiltro" [usuarios]="usuarios()" [(usuarioId)]="usuarioFiltro" />
+
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (cuentasFiltradas().length === 0) {
+    <app-empty-state
+      icono="ms:credit_card"
+      [mensaje]="fechaFiltro()
+        ? 'No hay cuentas para la fecha seleccionada.'
+        : 'No hay cuentas por pagar. Registra una compra a crédito en el módulo Compras.'"
+    />
+  } @else {
+    <div class="resumen">
+      <span>Total por pagar</span>
+      <b>{{ totalPorPagar() | formatoValor }}</b>
+    </div>
+
+    @for (grupo of cuentasPorFecha(); track grupo.fecha) {
+      <div class="fecha-grupo">{{ etiquetaFecha(grupo.fecha) }}</div>
+      <ion-accordion-group class="lista">
+        @for (c of grupo.items; track c.id) {
+          <ion-accordion [value]="c.id" (ionChange)="alAbrir(c)">
+            <ion-item slot="header" lines="full">
+              <ion-label>
+                <h2>{{ c.proveedor_nombre }}</h2>
+                @if (!c.compra_id && c.concepto) {
+                  <p>{{ c.concepto }}</p>
+                }
+              </ion-label>
+            @if (saldo(c) <= 0) {
+              <ion-badge slot="end" color="success">Pagada</ion-badge>
+            } @else {
+              <ion-badge slot="end" color="danger">{{ saldo(c) | formatoValor }}</ion-badge>
+            }
+          </ion-item>
+
+          <div class="detalle" slot="content">
+            <div class="datos">
+              <span>Total crédito: <b>{{ c.total | formatoValor }}</b></span>
+              <span>Pagado: <b>{{ c.abonado ?? 0 | formatoValor }}</b></span>
+              <span>Saldo: <b>{{ saldo(c) | formatoValor }}</b></span>
+            </div>
+
+            @if (pagos()[c.id!]; as pagosCuenta) {
+              @if (pagosCuenta.length) {
+                <p class="subtitulo">Pagos</p>
+                @for (p of pagosCuenta; track p.id) {
+                  <div class="fila">
+                    <span class="pago">-{{ p.valor | formatoValor }}</span>
+                    <span class="fecha">{{ p.created_at?.slice(0, 10) }}</span>
+                    @if (esAdmin()) {
+                      <ion-button fill="clear" size="small" color="danger" (click)="confirmarEliminarPago(c, p, $event)" aria-label="Eliminar pago">
+                        <ion-icon slot="icon-only" name="trash"></ion-icon>
+                      </ion-button>
+                    }
+                  </div>
+                }
+              }
+            }
+
+            @if (saldo(c) > 0) {
+              <ion-button expand="block" fill="outline" size="small" (click)="abrirPago(c, $event)">
+                <ion-icon slot="start" name="cash"></ion-icon>
+                Registrar pago
+              </ion-button>
+            }
+            @if ((c.abonado ?? 0) === 0 && esAdmin()) {
+              <ion-button expand="block" fill="outline" size="small" color="danger" (click)="confirmarEliminarCuenta(c, $event)">
+                <ion-icon slot="start" name="trash"></ion-icon>
+                Eliminar cuenta
+              </ion-button>
+            }
+          </div>
+        </ion-accordion>
+        }
+      </ion-accordion-group>
+    }
+  }
+
+  <ion-modal [isOpen]="modalAbierto()" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModal()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Registrar pago</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardarPago()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          @if (pagoCuenta; as cuenta) {
+            <ion-item>
+              <ion-input label="Proveedor" label-placement="floating" [value]="cuenta.proveedor_nombre" [readonly]="true"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-input label="Saldo pendiente" label-placement="floating" [value]="saldo(cuenta) | formatoValor" [readonly]="true"></ion-input>
+            </ion-item>
+            <ion-item>
+              <app-input-valor label="Valor del pago" [(valor)]="valorPago" />
+            </ion-item>
+          }
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="abrirNuevaCuenta()" aria-label="Nueva cuenta por pagar">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="modalCuentaAbierta()" (didDismiss)="cerrarModalCuenta()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModalCuenta()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Nueva cuenta por pagar</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardarCuenta()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-select
+              label="Proveedor"
+              label-placement="floating"
+              [value]="nuevaProveedorId"
+              (ionChange)="seleccionarProveedor($event)"
+              interface="action-sheet"
+              placeholder="Selecciona un proveedor"
+            >
+              @for (pr of proveedores(); track pr.id) {
+                <ion-select-option [value]="pr.id">{{ pr.nombre }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item button detail="false" (click)="agregarProveedor()">
+            <ion-icon slot="start" name="person-add" color="primary"></ion-icon>
+            <ion-label color="primary">Agregar proveedor</ion-label>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Concepto (opcional)" label-placement="floating" [(ngModel)]="nuevaConcepto"></ion-input>
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Valor" [(valor)]="nuevaValor" />
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

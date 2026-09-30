@@ -1,0 +1,114 @@
+<app-page-header title="Ajustes" />
+
+<ion-content [fullscreen]="true">
+  <div class="seccion">
+    <span class="titulo">Mi cuenta</span>
+  </div>
+
+  <ion-list class="tarjeta" lines="full">
+    <ion-item button detail="false" (click)="toggleCambioClave()">
+      <ion-icon slot="start" name="lock-closed" color="medium"></ion-icon>
+      <ion-label>
+        <h2>Cambiar contraseña</h2>
+        <p>Actualiza la contraseña de tu usuario</p>
+      </ion-label>
+    </ion-item>
+    @if (cambioClaveAbierto()) {
+      <ion-item>
+        <ion-input
+          label="Contraseña actual"
+          labelPlacement="stacked"
+          type="password"
+          [(ngModel)]="claveActual"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          label="Nueva contraseña"
+          labelPlacement="stacked"
+          type="password"
+          [(ngModel)]="nuevaClave"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          label="Confirmar nueva contraseña"
+          labelPlacement="stacked"
+          type="password"
+          [(ngModel)]="confirmarClave"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-button slot="end" fill="solid" [disabled]="cambiandoClave()" (click)="guardarClave()">
+          Actualizar
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+
+  @if (esAdmin()) {
+    <div class="seccion">
+      <span class="titulo">Sincronización</span>
+    </div>
+
+    <ion-list class="tarjeta" lines="full">
+    <ion-item>
+      <ion-icon slot="start" name="server" color="medium"></ion-icon>
+      <ion-input
+        #servidorInput
+        label="Servidor"
+        labelPlacement="stacked"
+        placeholder="http://192.168.1.10:3000"
+        [value]="urlServidor()"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-icon slot="start" name="lock-closed" color="medium"></ion-icon>
+      <ion-input
+        #tokenInput
+        label="Token (opcional)"
+        labelPlacement="stacked"
+        placeholder="Solo si el servidor lo requiere"
+        [value]="token()"
+      ></ion-input>
+    </ion-item>
+    <ion-item button detail="false" [disabled]="sincronizando()" (click)="sincronizarAhora()">
+      <ion-icon slot="start" name="sync" color="primary"></ion-icon>
+      <ion-label>
+        <h2>{{ sincronizando() ? 'Sincronizando…' : 'Sincronizar ahora' }}</h2>
+        <p>{{ ultimaSync() ? 'Última sync: ' + ultimaSync() : 'Nunca se ha sincronizado' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div class="seccion">
+    <span class="titulo">Datos</span>
+  </div>
+
+  <ion-list class="tarjeta" lines="full">
+    <ion-item>
+      <ion-icon slot="start" name="server" color="medium"></ion-icon>
+      <ion-label>
+        <h2>Almacenamiento</h2>
+        <p>{{ esWeb ? 'Los datos se guardan localmente en el navegador y viajan al servidor al presionar "Sincronizar ahora".' : 'Los datos se guardan localmente en el dispositivo (SQLite).' }}</p>
+      </ion-label>
+    </ion-item>
+    @if (esWeb) {
+      <ion-item button detail="false" (click)="confirmarRestablecimiento()">
+        <ion-icon slot="start" name="refresh" color="medium"></ion-icon>
+        <ion-label>
+          <h2>Restablecer aplicación</h2>
+          <p>Borra los datos locales de este navegador y los recupera del servidor.</p>
+        </ion-label>
+      </ion-item>
+    }
+    <ion-item button detail="false" (click)="confirmarEliminacion()">
+      <ion-icon slot="start" name="trash" color="danger"></ion-icon>
+      <ion-label>
+        <h2 class="peligro">Eliminar registros de este dispositivo</h2>
+        <p>Borra los datos locales. El servidor no se toca: al sincronizar, todo se recupera desde allí.</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+  }
+</ion-content>

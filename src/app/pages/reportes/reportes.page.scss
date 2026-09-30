@@ -1,0 +1,93 @@
+.tarjeta {
+  margin: 12px;
+  padding: 12px var(--app-space-4);
+
+  .tarjeta-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--ion-color-light-shade);
+
+    app-icon {
+      font-size: 20px;
+      color: var(--ion-color-success);
+    }
+  }
+
+  .fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    font-size: 14px;
+    color: var(--ion-color-medium);
+
+    b {
+      font-size: 15px;
+      color: var(--ion-color-dark);
+
+      &.success { color: var(--ion-color-success); }
+      &.danger { color: var(--ion-color-danger); }
+      &.warning { color: var(--ion-color-warning); }
+    }
+
+    &.clicable { cursor: pointer; }
+  }
+
+  .lista-stock-bajo {
+    padding: 4px 0 4px 8px;
+
+    .fila-producto {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      font-size: 14px;
+      border-bottom: 1px dashed var(--ion-color-light-shade);
+
+      &:last-child { border-bottom: none; }
+
+      .nombre { color: var(--ion-color-dark); }
+      .cantidades { color: var(--ion-color-danger); white-space: nowrap; }
+    }
+
+    .vacio {
+      color: var(--ion-color-medium);
+      font-size: 13px;
+      margin: 4px 0;
+    }
+  }
+
+  .grupo-actividad {
+    padding: 8px 0 4px;
+
+    & + .grupo-actividad {
+      border-top: 1px dashed var(--ion-color-light-shade);
+    }
+
+    .grupo-cabecera {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--ion-color-dark);
+      padding: 4px 0;
+
+      app-icon {
+        font-size: 16px;
+        color: var(--ion-color-medium);
+      }
+    }
+  }
+}
+
+.vacio {
+  color: var(--ion-color-medium);
+  font-size: 13px;
+  margin: 8px 0 4px;
+}

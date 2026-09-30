@@ -1,0 +1,52 @@
+.valor-efectivo {
+  color: var(--ion-color-success);
+}
+
+.valor-transferencia {
+  color: var(--app-yellow-text);
+}
+
+.valor-credito {
+  color: var(--ion-color-danger);
+}
+
+.valor-mixto {
+  color: var(--ion-color-primary);
+}
+
+.total {
+  text-align: end;
+  font-size: var(--app-font-size-base);
+}
+
+.totales-modal {
+  padding: var(--app-space-4) 20px 32px;
+
+  .fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 16px;
+
+    b {
+      font-size: 19px;
+    }
+  }
+}
+
+.nota-linea {
+  font-size: var(--app-font-size-sm);
+  color: var(--ion-color-medium);
+  white-space: normal;
+}
+
+.pagos-mixto {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--app-space-2);
+  padding: var(--app-space-2) 0;
+  font-size: var(--app-font-size-sm);
+  color: var(--ion-color-medium);
+}

@@ -1,0 +1,270 @@
+<app-page-header title="Ventas" />
+
+<ion-content [fullscreen]="true">
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (ventas().length === 0) {
+    <app-empty-state
+      icono="ms:shopping_cart"
+      mensaje="No hay ventas registradas. Usa el botón + para registrar la primera."
+    />
+  } @else {
+    <app-filtro-fecha [(fecha)]="fechaFiltro" [usuarios]="usuarios()" [(usuarioId)]="usuarioFiltro" />
+
+    @if (ventasFiltradas().length === 0) {
+      <app-empty-state
+        icono="ms:shopping_cart"
+        mensaje="No hay ventas para la fecha seleccionada."
+      />
+    } @else {
+      @for (grupo of ventasPorFecha(); track grupo.fecha) {
+        <div class="fecha-grupo">{{ etiquetaFecha(grupo.fecha) }}</div>
+        <ion-accordion-group class="lista">
+        @for (v of grupo.ventas; track v.id) {
+          <ion-accordion [value]="v.id">
+            <ion-item slot="header" lines="full">
+              <ion-label>
+                <h2>{{ metodoLabel(v) }}</h2>
+              </ion-label>
+              <ion-label slot="end" class="total">
+                <b class="valor-{{ metodoClase(v) }}">{{ v.total | formatoValor }}</b>
+              </ion-label>
+            </ion-item>
+
+            <div class="detalle" slot="content">
+              @for (d of detalles()[v.id!]; track d.id) {
+                <div class="linea">
+                  <span class="producto">{{ d.producto_nombre }}</span>
+                  <span class="cantidades">
+                    @if (d.presentacion_nombre) {
+                      {{ d.cantidad | formatoEntero }} u × {{ precioPorUnidad(d) | formatoValor }}
+                      <small>{{ d.presentacion_nombre }} ({{ d.presentacion_factor }} u)</small>
+                    } @else {
+                      {{ d.cantidad | formatoEntero }} × {{ d.precio_unitario | formatoValor }}
+                    }
+                    = <b>{{ (d.cantidad * precioPorUnidad(d)) | formatoValor }}</b>
+                  </span>
+                </div>
+              }
+              @if (v.metodo_pago === 'mixto') {
+                <div class="pagos-mixto">
+                  @if (pagoMixto(v, 'efectivo') > 0) {
+                    <span>Efectivo: <b class="valor-efectivo">{{ pagoMixto(v, 'efectivo') | formatoValor }}</b></span>
+                  }
+                  @if (pagoMixto(v, 'transferencia') > 0) {
+                    <span>Transferencia: <b class="valor-transferencia">{{ pagoMixto(v, 'transferencia') | formatoValor }}</b></span>
+                  }
+                  @if (pagoMixto(v, 'credito') > 0) {
+                    <span>Crédito: <b class="valor-credito">{{ pagoMixto(v, 'credito') | formatoValor }}</b></span>
+                  }
+                </div>
+              }
+              <div class="acciones-venta">
+                <ion-button fill="outline" size="small" (click)="abrirRecibo(v, $event)">
+                  <ion-icon slot="start" name="print"></ion-icon>
+                  Imprimir
+                </ion-button>
+                @if (esAdmin()) {
+                  <ion-button fill="outline" size="small" (click)="abrirEditar(v, $event)">
+                    <ion-icon slot="start" name="pencil"></ion-icon>
+                    Editar
+                  </ion-button>
+                  <ion-button fill="outline" size="small" color="danger" (click)="confirmarEliminar(v, $event)">
+                    <ion-icon slot="start" name="trash"></ion-icon>
+                    Eliminar
+                  </ion-button>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+        }
+      </ion-accordion-group>
+    }
+    }
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="abrirNueva()" aria-label="Nueva venta">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="modalAbierto()" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModal()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>{{ ventaEditando() ? 'Editar venta' : 'Nueva venta' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardar()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-select
+              label="Método de pago"
+              label-placement="floating"
+              [(ngModel)]="metodoPago"
+              interface="action-sheet"
+            >
+              <ion-select-option value="efectivo">Efectivo</ion-select-option>
+              <ion-select-option value="transferencia">Transferencia</ion-select-option>
+              <ion-select-option value="credito">Crédito</ion-select-option>
+              <ion-select-option value="mixto">Mixto</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-textarea
+              label="Información adicional"
+              label-placement="floating"
+              [(ngModel)]="nota"
+              placeholder="Nota"
+              rows="1"
+            />
+          </ion-item>
+          @if (metodoPago === 'mixto') {
+            <ion-item>
+              <app-input-valor label="Valor en efectivo" [(valor)]="montoEfectivo" />
+            </ion-item>
+            <ion-item>
+              <app-input-valor label="Valor por transferencia" [(valor)]="montoTransferencia" />
+            </ion-item>
+            <ion-item>
+              <app-input-valor label="Valor a crédito" [(valor)]="montoCredito" />
+            </ion-item>
+            @if (restanteMixto() !== 0) {
+              <ion-item lines="none">
+                <ion-note [color]="restanteMixto() > 0 ? 'warning' : 'danger'">
+                  @if (restanteMixto() > 0) {
+                    Falta cubrir {{ restanteMixto() | formatoValor }}
+                  } @else {
+                    Los pagos exceden el total en {{ -restanteMixto() | formatoValor }}
+                  }
+                </ion-note>
+              </ion-item>
+            }
+          }
+          @if (metodoPago === 'credito' || (metodoPago === 'mixto' && (montoCredito ?? 0) > 0)) {
+            <ion-item>
+              <ion-select
+                label="Cliente"
+                label-placement="floating"
+                [(ngModel)]="clienteId"
+                interface="action-sheet"
+                placeholder="Selecciona un cliente"
+              >
+                @for (cl of clientes(); track cl.id) {
+                  <ion-select-option [value]="cl.id">{{ cl.nombre }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            <ion-item button detail="false" (click)="agregarCliente()">
+              <ion-icon slot="start" name="person-add" color="primary"></ion-icon>
+              <ion-label color="primary">Agregar cliente</ion-label>
+            </ion-item>
+          }
+          <ion-item button detail="false" (click)="abrirGestionClientes()">
+            <ion-icon slot="start" name="settings-outline" color="medium"></ion-icon>
+            <ion-label>Gestionar clientes</ion-label>
+          </ion-item>
+        </ion-list>
+
+        <div class="seccion">
+          <span class="titulo">Productos</span>
+          <ion-button fill="clear" size="small" (click)="agregarLinea()">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Agregar línea
+          </ion-button>
+        </div>
+
+        @for (linea of lineas(); track $index) {
+          <ion-list lines="full">
+            <ion-item button detail="false" (click)="abrirSelector($index)">
+              <ion-label class="selector-label">
+                <p>Producto</p>
+                <h2 [class.placeholder]="!linea.producto_id">
+                  {{ nombreProducto(linea.producto_id) || 'Selecciona un producto' }}
+                </h2>
+              </ion-label>
+            </ion-item>
+            @if (linea.producto_id && presentacionesDe(linea.producto_id).length > 0) {
+              <ion-item>
+                <ion-select
+                  label="Presentación"
+                  label-placement="floating"
+                  interface="action-sheet"
+                  [value]="linea.presentacion_id ?? 0"
+                  (ionChange)="actualizarPresentacion($index, $event.detail.value)"
+                >
+                  <ion-select-option [value]="0">Unidad</ion-select-option>
+                  @for (pr of presentacionesDe(linea.producto_id); track pr.id) {
+                    <ion-select-option [value]="pr.id">{{ pr.nombre }} ({{ pr.factor }} u)</ion-select-option>
+                  }
+                </ion-select>
+              </ion-item>
+            }
+            <ion-item>
+              <app-input-valor [label]="factorDe(linea) > 1 ? 'Cantidad de ' + nombrePresentacion(linea).toLowerCase() : 'Cantidad'" [(valor)]="linea.cantidad" (valorChange)="actualizarCantidad($index, $event)" />
+            </ion-item>
+            @if (linea.cantidad && factorDe(linea) > 1) {
+              <ion-item lines="none">
+                <ion-note class="nota-linea">
+                  {{ linea.cantidad | formatoEntero }} × {{ factorDe(linea) | formatoEntero }} u = {{ unidadesDe(linea) | formatoEntero }} unidades ·
+                  {{ precioLinea(linea) | formatoValor }} por {{ nombrePresentacion(linea) }}
+                </ion-note>
+              </ion-item>
+            }
+            <ion-item lines="none">
+              <ion-button slot="end" fill="clear" color="danger" (click)="quitarLinea($index)">
+                <ion-icon slot="start" name="trash"></ion-icon>
+                Quitar línea
+              </ion-button>
+            </ion-item>
+          </ion-list>
+        }
+
+        <div class="totales-modal">
+          <div class="fila">
+            <span>Total</span>
+            <b>{{ total() | formatoValor }}</b>
+          </div>
+        </div>
+        <app-selector-modal
+          titulo="Seleccionar producto"
+          [opciones]="opcionesProductos()"
+          [seleccionado]="productoSeleccionado()"
+          [(abierto)]="selectorAbierto"
+          (seleccion)="asignarProducto($event)"
+        />
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  @if (ventaRecibo(); as ventaReciboActual) {
+    <app-recibo-modal
+      [venta]="ventaReciboActual"
+      [detalles]="detallesRecibo()"
+      [pagos]="pagosRecibo()"
+      [clienteNombre]="clienteRecibo()"
+      [credito]="creditoRecibo()"
+      [(abierto)]="reciboAbierto"
+      (imprimir)="imprimirRecibo()"
+    />
+  }
+
+  <app-selector-modal
+    titulo="Gestionar clientes"
+    [opciones]="opcionesClientes()"
+    [seleccionado]="null"
+    [conAcciones]="esAdmin()"
+    [(abierto)]="selectorClientesAbierto"
+    (editar)="editarCliente($event)"
+    (eliminar)="confirmarEliminarCliente($event)"
+  />
+</ion-content>

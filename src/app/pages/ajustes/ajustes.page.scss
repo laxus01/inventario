@@ -1,0 +1,12 @@
+.seccion {
+  padding: var(--app-space-4) var(--app-space-4) var(--app-space-2);
+}
+
+.tarjeta {
+  margin: 0 var(--app-space-3);
+  overflow: hidden;
+
+  .peligro {
+    color: var(--ion-color-danger);
+  }
+}

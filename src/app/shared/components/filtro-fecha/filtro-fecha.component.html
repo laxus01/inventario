@@ -1,0 +1,72 @@
+<div class="filtros">
+  <ion-chip [color]="fecha() ? 'medium' : 'primary'" (click)="limpiarFiltro()">
+    <ion-label>Todas</ion-label>
+  </ion-chip>
+  <ion-chip outline="true" [color]="fecha() ? 'primary' : 'medium'" (click)="abrirCalendario()">
+    <ion-icon name="calendar"></ion-icon>
+    <ion-label>{{ fecha() ? etiquetaFecha(fecha()!) : 'Fecha' }}</ion-label>
+  </ion-chip>
+  @if (usuarios().length > 0) {
+    <ion-chip outline="true" [color]="usuarioId() ? 'primary' : 'medium'" (click)="abrirUsuarios()">
+      <ion-icon name="person"></ion-icon>
+      <ion-label>{{ usuarioId() ? etiquetaUsuario() : 'Usuario' }}</ion-label>
+    </ion-chip>
+  }
+</div>
+
+<ion-modal [isOpen]="calendarioAbierto()" (didDismiss)="cerrarCalendario()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cerrarCalendario()">Cancelar</ion-button>
+        </ion-buttons>
+        <ion-title>Elegir fecha</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="aplicarFecha()" [strong]="true">Aplicar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-datetime
+        presentation="date"
+        [(ngModel)]="fechaCalendario"
+        [max]="hoyIso"
+        locale="es-CO"
+      ></ion-datetime>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="usuariosAbierto()" (didDismiss)="cerrarUsuarios()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cerrarUsuarios()">Cancelar</ion-button>
+        </ion-buttons>
+        <ion-title>Elegir usuario</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        <ion-item button detail="false" (click)="seleccionarUsuario(null)">
+          <ion-icon name="people" slot="start"></ion-icon>
+          <ion-label>Todos los usuarios</ion-label>
+          @if (usuarioId() === null) {
+            <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+          }
+        </ion-item>
+        @for (u of usuarios(); track u.id) {
+          <ion-item button detail="false" (click)="seleccionarUsuario(u.id!)">
+            <ion-icon name="person" slot="start"></ion-icon>
+            <ion-label>{{ u.nombre }}</ion-label>
+            @if (usuarioId() === u.id) {
+              <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+            }
+          </ion-item>
+        }
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>

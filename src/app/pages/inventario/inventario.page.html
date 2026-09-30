@@ -1,0 +1,112 @@
+<app-page-header title="Inventario" />
+
+<ion-content [fullscreen]="true">
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (productos().length === 0) {
+    <app-empty-state
+      icono="ms:inventory"
+      mensaje="No hay productos en el inventario. Crea productos en el módulo Productos."
+    />
+  } @else {
+    <div class="resumen">
+      <span>Valor del inventario</span>
+      <b>{{ valorTotal() | formatoValor }}</b>
+    </div>
+
+    <ion-accordion-group class="lista">
+      @for (p of productos(); track p.id) {
+        <ion-accordion [value]="p.id" (ionChange)="alAbrir(p)">
+          <ion-item slot="header" lines="full">
+            <ion-label>
+              <h2>{{ p.nombre }}</h2>
+              <p>Costo actual: {{ (p.costo_actual ?? 0) | formatoValor }}</p>
+            </ion-label>
+            <ion-badge slot="end" [color]="stockBajo(p) ? 'danger' : 'success'">
+              {{ p.stock }}
+            </ion-badge>
+          </ion-item>
+
+          <div class="detalle" slot="content">
+            <div class="datos">
+              <span>Stock mínimo: <b>{{ p.stock_minimo }}</b></span>
+              <span>Valor en inventario: <b>{{ valorProducto(p) | formatoValor }}</b></span>
+            </div>
+
+            @if (lotes()[p.id!]; as lotesProducto) {
+              @if (lotesProducto.length) {
+                <p class="subtitulo">Lotes (FIFO)</p>
+                @for (l of lotesProducto; track l.id) {
+                  <div class="fila">
+                    <span>Lote #{{ l.id }}</span>
+                    <span>{{ l.cantidad_restante | formatoEntero }} × {{ l.costo_unitario | formatoValor }}</span>
+                  </div>
+                }
+              }
+            }
+
+            @if (movimientos()[p.id!]; as movs) {
+              @if (movs.length) {
+                <p class="subtitulo">Últimos movimientos</p>
+                @for (m of movs; track m.id) {
+                  <div class="fila">
+                    <span [class.entrada]="m.tipo === 'entrada'" [class.salida]="m.tipo === 'salida'">
+                      {{ m.tipo === 'entrada' ? '+' : '-' }}{{ m.cantidad }}
+                    </span>
+                    <span class="motivo">{{ m.motivo }} · {{ m.created_at?.slice(0, 10) }}</span>
+                    @if (esAdmin() && esAjuste(m)) {
+                      <ion-button fill="clear" size="small" color="danger" (click)="confirmarEliminarAjuste(p, m, $event)" aria-label="Eliminar ajuste">
+                        <ion-icon slot="icon-only" name="trash"></ion-icon>
+                      </ion-button>
+                    }
+                  </div>
+                }
+              }
+            }
+
+            @if (esAdmin()) {
+              <ion-button expand="block" fill="outline" size="small" (click)="abrirAjuste(p, $event)">
+                <ion-icon slot="start" name="swap-vertical"></ion-icon>
+                Ajustar inventario
+              </ion-button>
+            }
+          </div>
+        </ion-accordion>
+      }
+    </ion-accordion-group>
+  }
+
+  <ion-modal [isOpen]="modalAbierto()" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModal()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Ajustar: {{ ajusteProducto?.nombre }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardarAjuste()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-segment [(ngModel)]="tipoAjuste">
+              <ion-segment-button value="entrada">Entrada</ion-segment-button>
+              <ion-segment-button value="salida">Salida</ion-segment-button>
+            </ion-segment>
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Cantidad" [(valor)]="cantidadAjuste" />
+          </ion-item>
+          <ion-item>
+            <ion-input label="Motivo" label-placement="floating" [(ngModel)]="motivoAjuste"></ion-input>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

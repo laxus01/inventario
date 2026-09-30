@@ -1,0 +1,45 @@
+<ion-modal [isOpen]="abierto()" (didDismiss)="cerrar()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cerrar()">Cancelar</ion-button>
+        </ion-buttons>
+        <ion-title>{{ titulo() }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-searchbar
+        placeholder="Buscar por nombre"
+        [value]="busqueda()"
+        (ionInput)="buscar($event)"
+      ></ion-searchbar>
+
+      <ion-list lines="full">
+        @for (op of filtradas(); track op.id) {
+          <ion-item button detail="false" (click)="elegir(op.id)">
+            <ion-label>
+              <h2>{{ op.nombre }}</h2>
+              @if (op.detalle) {
+                <p>{{ op.detalle }}</p>
+              }
+            </ion-label>
+            @if (conAcciones()) {
+              <ion-button slot="end" fill="clear" size="small" (click)="editar.emit(op.id); $event.stopPropagation()" aria-label="Editar">
+                <ion-icon slot="icon-only" name="pencil" color="primary"></ion-icon>
+              </ion-button>
+              <ion-button slot="end" fill="clear" size="small" (click)="eliminar.emit(op.id); $event.stopPropagation()" aria-label="Eliminar">
+                <ion-icon slot="icon-only" name="trash" color="danger"></ion-icon>
+              </ion-button>
+            }
+            @if (op.id === seleccionado()) {
+              <ion-icon slot="end" name="checkmark" color="primary"></ion-icon>
+            }
+          </ion-item>
+        } @empty {
+          <app-empty-state mensaje="Sin resultados para la búsqueda." />
+        }
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>

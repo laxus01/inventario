@@ -1,0 +1,35 @@
+<ion-content class="login-content" [fullscreen]="true">
+  <div class="contenedor">
+    <app-icon name="ms:inventory" class="logo" />
+    <h1>Inventario</h1>
+    <p class="subtitulo">Inicia sesión para continuar</p>
+
+    <ion-list lines="full" class="formulario">
+      <ion-item>
+        <ion-input
+          label="Usuario"
+          label-placement="floating"
+          [(ngModel)]="usuario"
+          autocapitalize="none"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          label="Contraseña"
+          label-placement="floating"
+          [type]="mostrarClave ? 'text' : 'password'"
+          [(ngModel)]="clave"
+          (keyup.enter)="ingresar()"
+        ></ion-input>
+        <ion-button fill="clear" slot="end" type="button" (click)="toggleMostrarClave()" aria-label="Mostrar u ocultar contraseña">
+          <ion-icon slot="icon-only" [name]="mostrarClave ? 'eye-off' : 'eye'"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+
+    <ion-button expand="block" class="btn-ingresar" (click)="ingresar()" [disabled]="ingresando">
+      <ion-icon slot="start" name="log-in"></ion-icon>
+      Ingresar
+    </ion-button>
+  </div>
+</ion-content>

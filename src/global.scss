@@ -1,0 +1,282 @@
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Put style rules here that you want to apply globally. These styles are for
+ * the entire app and not just one component. Additionally, this file can be
+ * used as an entry point to import other CSS/Sass files to be included in the
+ * output CSS.
+ * For more information on global stylesheets, visit the documentation:
+ * https://ionicframework.com/docs/layout/global-stylesheets
+ */
+
+/* Core CSS required for Ionic components to work properly */
+@import "@ionic/angular/css/core.css";
+
+/* Basic CSS for apps built with Ionic */
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Optional CSS utils that can be commented out */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+/**
+ * Ionic Dark Mode
+ * -----------------------------------------------------
+ * For more info, please see:
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
+
+/* @import "@ionic/angular/css/palettes/dark.always.css"; */
+/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+/* El tema se define manualmente en src/theme/variables.scss */
+
+/* ============================================================================
+   Componentes Ionic
+   ========================================================================== */
+
+/* Subir el botón flotante 30px para que no quede pegado al borde inferior */
+ion-fab[vertical="bottom"] {
+  margin-bottom: 30px;
+}
+
+/* Botón flotante y chips: texto/icono siempre blanco */
+ion-fab-button {
+  --color: #ffffff;
+  --color-activated: #ffffff;
+  --box-shadow: var(--app-shadow-md);
+}
+
+ion-chip {
+  --color: #ffffff;
+}
+
+/* Botones: contraste consistente y feedback táctil */
+ion-button {
+  --border-radius: var(--app-radius-sm);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Tarjetas y acordeones: superficie unificada */
+ion-card,
+ion-accordion,
+.tarjeta {
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+  background: var(--app-surface);
+}
+
+ion-accordion-group.lista {
+  margin: var(--app-space-3);
+  background: transparent;
+}
+
+ion-accordion {
+  margin-bottom: var(--app-space-3);
+  overflow: hidden;
+  background: var(--app-surface);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Items: separadores suaves */
+ion-item {
+  --color: var(--ion-text-color);
+}
+
+/* Searchbar y inputs dentro de listas */
+ion-searchbar {
+  --background: var(--app-surface-2);
+  --border-radius: var(--app-radius-sm);
+}
+
+/* Toasts: superficie oscura con texto legible */
+ion-toast {
+  --border-radius: var(--app-radius-md);
+  font-weight: 500;
+}
+
+/* Action sheets y alerts: superficies claras coherentes con el tema */
+ion-alert {
+  --background: var(--app-surface);
+  --border-radius: var(--app-radius-md);
+
+  .alert-title {
+    color: var(--ion-text-color);
+    font-weight: var(--app-font-weight-semibold);
+  }
+
+  .alert-message {
+    color: var(--app-text-muted);
+  }
+
+  .alert-button {
+    color: var(--ion-color-primary);
+    font-weight: var(--app-font-weight-semibold);
+  }
+}
+
+ion-action-sheet {
+  --background: var(--app-surface);
+  --border-radius: var(--app-radius-md);
+  --title-color: var(--app-text-muted);
+}
+
+ion-modal {
+  --border-radius: var(--app-radius-lg);
+}
+
+/* ============================================================================
+   Patrones compartidos de páginas
+   ========================================================================== */
+
+/* Estado de carga centrado */
+.centrado {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+
+  ion-spinner {
+    width: 42px;
+    height: 42px;
+    color: var(--ion-color-primary);
+  }
+}
+
+/* Píldora de fecha agrupando listas */
+.fecha-grupo {
+  display: block;
+  width: fit-content;
+  margin: var(--app-space-4) auto var(--app-space-1);
+  padding: 6px var(--app-space-4);
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  font-weight: var(--app-font-weight-semibold);
+  font-size: var(--app-font-size-sm);
+  color: var(--ion-color-dark);
+  text-align: center;
+}
+
+/* Tarjeta de resumen (total del período) */
+.resumen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: var(--app-space-3);
+  padding: var(--app-space-3) var(--app-space-4);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
+  font-size: var(--app-font-size-base);
+
+  b {
+    font-size: 18px;
+  }
+}
+
+/* Encabezado de sección dentro de una página */
+.seccion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--app-space-4) var(--app-space-4) var(--app-space-1);
+
+  .titulo {
+    font-weight: var(--app-font-weight-semibold);
+    color: var(--ion-color-dark);
+  }
+}
+
+/* Detalle expandible de un acordeón */
+.detalle {
+  padding: var(--app-space-3) var(--app-space-4) var(--app-space-4);
+
+  .linea {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--app-space-3);
+    padding: 6px 0;
+    font-size: var(--app-font-size-md);
+    border-bottom: 1px dashed var(--ion-color-light-shade);
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
+    .producto {
+      color: var(--ion-color-dark);
+    }
+
+    .cantidades {
+      color: var(--ion-color-medium);
+      white-space: nowrap;
+
+      b {
+        color: var(--ion-color-dark);
+      }
+    }
+  }
+
+  .datos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--app-space-1);
+    font-size: var(--app-font-size-md);
+    color: var(--ion-color-dark);
+    margin-bottom: var(--app-space-2);
+  }
+
+  .subtitulo {
+    font-weight: var(--app-font-weight-semibold);
+    font-size: var(--app-font-size-sm);
+    color: var(--ion-color-medium);
+    margin: var(--app-space-3) 0 var(--app-space-1);
+  }
+
+  .fila {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--app-font-size-md);
+    padding: var(--app-space-1) 0;
+  }
+
+  ion-button {
+    margin-top: var(--app-space-3);
+  }
+}
+
+/* Fila de acciones (editar/eliminar) dentro de un detalle */
+.acciones-venta,
+.acciones-compra {
+  display: flex;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-3);
+
+  ion-button {
+    flex: 1;
+  }
+}
+
+/* ============================================================================
+   Ajustes por plataforma
+   ========================================================================== */
+
+/* iOS: headers translúcidos y sin borde duro */
+.ios ion-toolbar {
+  --border-width: 0;
+}
+
+/* Android: elevación sutil bajo el toolbar */
+.md ion-toolbar {
+  --border-width: 0 0 1px 0;
+  --box-shadow: 0 1px 2px rgba(11, 11, 13, 0.04);
+}

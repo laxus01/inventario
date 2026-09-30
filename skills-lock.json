@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ionic-design": {
+      "source": "cap-go/capgo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ionic-design/SKILL.md",
+      "computedHash": "53fee1af0a454c03fd35afd93d1127f82f417e86fc61c9ad2e49fd46af16208f"
+    }
+  }
+}

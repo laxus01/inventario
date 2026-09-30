@@ -1,0 +1,155 @@
+<app-page-header title="Productos" />
+
+<ion-content [fullscreen]="true">
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (filtrados().length === 0) {
+    <app-empty-state
+      icono="ms:inventory_2"
+      mensaje="No hay productos registrados. Usa el botón + para agregar el primero."
+    />
+  } @else {
+    <ion-accordion-group class="lista">
+      @for (p of filtrados(); track p.id) {
+        <ion-accordion [value]="p.id">
+          <ion-item slot="header" lines="full">
+            <ion-label>
+              <h2>{{ p.nombre }}</h2>
+              <p>@if (p.categoria_nombre) { {{ p.categoria_nombre }} }</p>
+            </ion-label>
+            @if (esAdmin()) {
+              <ion-button slot="end" fill="clear" (click)="abrirEdicion(p, $event)" aria-label="Editar">
+                <ion-icon slot="icon-only" name="pencil" color="primary"></ion-icon>
+              </ion-button>
+              <ion-button slot="end" fill="clear" (click)="confirmarEliminar(p, $event)" aria-label="Eliminar">
+                <ion-icon slot="icon-only" name="trash" color="danger"></ion-icon>
+              </ion-button>
+            }
+          </ion-item>
+
+          <div class="detalle" slot="content">
+            @if (p.descripcion) {
+              <p class="descripcion">{{ p.descripcion }}</p>
+            }
+            <div class="lineas">
+              @if (presentacionesDe(p.id!).length === 0) {
+                <div class="linea">
+                  <span class="producto">Unidad</span>
+                  <span class="cantidades"><b>$ {{ p.precio_venta | formatoValor }}</b></span>
+                </div>
+              } @else {
+                @for (pr of presentacionesDe(p.id!); track pr.id) {
+                  <div class="linea">
+                    <span class="producto">{{ pr.nombre }} ({{ pr.factor }} u)</span>
+                    <span class="cantidades"><b>{{ precioPresentacionDe(pr, p) }}</b></span>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </ion-accordion>
+      }
+    </ion-accordion-group>
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="abrirNuevo()" aria-label="Nuevo producto">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="modalAbierto()" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModal()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>{{ form.id ? 'Editar producto' : 'Nuevo producto' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardar()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-input label="Producto" label-placement="floating" [(ngModel)]="form.nombre"></ion-input>
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Valor de venta" [(valor)]="form.precio_venta" />
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Mínimo en stock" [(valor)]="form.stock_minimo" />
+          </ion-item>
+        </ion-list>
+
+        <div class="seccion">
+          <span class="titulo">Presentaciones de venta</span>
+          <ion-button fill="clear" size="small" (click)="agregarPresentacion()">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Agregar
+          </ion-button>
+        </div>
+        @if (presentaciones().length === 0) {
+          <p class="sin-presentaciones">
+            Sin presentaciones. Agrega aquí cavas, medias cavas, etc. para venderlas en el módulo de ventas.
+          </p>
+        } @else {
+          <ion-list lines="full">
+            @for (pr of presentaciones(); track pr.id) {
+              <ion-item>
+                <ion-label>
+                  <h2>{{ pr.nombre }}</h2>
+                  <p>{{ pr.factor }} unidad(es) por presentación</p>
+                </ion-label>
+                <ion-label slot="end" class="precio-presentacion">
+                  {{ precioPresentacion(pr) }}
+                </ion-label>
+                @if (esAdmin() || !form.id) {
+                  <ion-button slot="end" fill="clear" (click)="editarPresentacion(pr, $event)" aria-label="Editar presentación">
+                    <ion-icon slot="icon-only" name="pencil" color="primary"></ion-icon>
+                  </ion-button>
+                  <ion-button slot="end" fill="clear" (click)="confirmarEliminarPresentacion(pr, $event)" aria-label="Eliminar presentación">
+                    <ion-icon slot="icon-only" name="trash" color="danger"></ion-icon>
+                  </ion-button>
+                }
+              </ion-item>
+            }
+          </ion-list>
+        }
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="modalPresentacionAbierta()" (didDismiss)="cerrarModalPresentacion()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModalPresentacion()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>{{ presentacionEditando ? 'Editar presentación' : 'Nueva presentación' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardarPresentacion()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-input label="Nombre (ej. Cava)" label-placement="floating" [(ngModel)]="presNombre"></ion-input>
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Unidades por presentación (ej. 30)" [(valor)]="presFactor" />
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Precio de venta (opcional)" [(valor)]="presPrecio" />
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

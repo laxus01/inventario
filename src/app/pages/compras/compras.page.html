@@ -1,0 +1,166 @@
+<app-page-header title="Compras" />
+
+<ion-content [fullscreen]="true">
+  <app-filtro-fecha [(fecha)]="fechaFiltro" [usuarios]="usuarios()" [(usuarioId)]="usuarioFiltro" />
+
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (comprasFiltradas().length === 0) {
+    <app-empty-state
+      icono="ms:shopping_bag"
+      [mensaje]="fechaFiltro()
+        ? 'No hay compras para la fecha seleccionada.'
+        : 'No hay compras registradas. Usa el botón + para registrar la primera.'"
+    />
+  } @else {
+    @for (grupo of comprasPorFecha(); track grupo.fecha) {
+      <div class="fecha-grupo">{{ etiquetaFecha(grupo.fecha) }}</div>
+      <ion-accordion-group class="lista">
+        @for (c of grupo.items; track c.id) {
+          <ion-accordion [value]="c.id">
+            <ion-item slot="header" lines="full">
+              <ion-label>
+                <h2>{{ c.proveedor_nombre }}</h2>
+              </ion-label>
+              <ion-label slot="end" class="total">
+                <b>{{ c.total | formatoValor }}</b>
+              </ion-label>
+            </ion-item>
+
+            <div class="detalle" slot="content">
+              @for (d of detalles()[c.id!]; track d.id) {
+                <div class="linea">
+                  <span class="producto">{{ d.producto_nombre }}</span>
+                  <span class="cantidades">
+                    {{ d.cantidad | formatoEntero }} × {{ d.costo_unitario | formatoValor }}
+                    = <b>{{ (d.cantidad * d.costo_unitario) | formatoValor }}</b>
+                  </span>
+                </div>
+              }
+              <div class="acciones-compra">
+                @if (esAdmin()) {
+                  <ion-button fill="outline" size="small" (click)="abrirEditar(c, $event)">
+                    <ion-icon slot="start" name="pencil"></ion-icon>
+                    Editar
+                  </ion-button>
+                  <ion-button fill="outline" size="small" color="danger" (click)="confirmarEliminar(c, $event)">
+                    <ion-icon slot="start" name="trash"></ion-icon>
+                    Eliminar
+                  </ion-button>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+        }
+      </ion-accordion-group>
+    }
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="abrirNueva()" aria-label="Nueva compra">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="modalAbierto()" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModal()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>{{ compraEditando() ? 'Editar compra' : 'Nueva compra' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardar()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-select
+              label="Proveedor"
+              label-placement="floating"
+              [value]="proveedorId"
+              (ionChange)="seleccionarProveedor($event)"
+              interface="action-sheet"
+              placeholder="Selecciona un proveedor"
+            >
+              @for (pr of proveedores(); track pr.id) {
+                <ion-select-option [value]="pr.id">{{ pr.nombre }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item button detail="false" (click)="agregarProveedor()">
+            <ion-icon slot="start" name="person-add" color="primary"></ion-icon>
+            <ion-label color="primary">Agregar proveedor</ion-label>
+          </ion-item>
+          <ion-item button detail="false" (click)="abrirGestionProveedores()">
+            <ion-icon slot="start" name="settings-outline" color="medium"></ion-icon>
+            <ion-label>Gestionar proveedores</ion-label>
+          </ion-item>
+          <ion-item>
+            <ion-toggle [(ngModel)]="esCredito">Compra a crédito</ion-toggle>
+          </ion-item>
+        </ion-list>
+
+        <div class="seccion">
+          <span class="titulo">Productos</span>
+          <ion-button fill="clear" size="small" (click)="agregarLinea()">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Agregar línea
+          </ion-button>
+        </div>
+
+        @for (linea of lineas(); track $index) {
+          <ion-list lines="full">
+            <ion-item button detail="false" (click)="abrirSelector($index)">
+              <ion-label class="selector-label">
+                <p>Producto</p>
+                <h2 [class.placeholder]="!linea.producto_id">
+                  {{ nombreProducto(linea.producto_id) || 'Selecciona un producto' }}
+                </h2>
+              </ion-label>
+            </ion-item>
+            <ion-item>
+              <app-input-valor label="Cantidad" [(valor)]="linea.cantidad" (valorChange)="actualizarLinea($index, 'cantidad', $event)" />
+            </ion-item>
+            <ion-item>
+              <app-input-valor label="Costo total" [(valor)]="linea.costo_total" (valorChange)="actualizarLinea($index, 'costo_total', $event)" />
+            </ion-item>
+            <ion-item lines="none">
+              <ion-button slot="end" fill="clear" color="danger" (click)="quitarLinea($index)">
+                <ion-icon slot="start" name="trash"></ion-icon>
+                Quitar línea
+              </ion-button>
+            </ion-item>
+          </ion-list>
+        }
+
+        <div class="total-modal">
+          <span>Total</span>
+          <b>{{ total() | formatoValor }}</b>
+        </div>
+        <app-selector-modal
+          titulo="Seleccionar producto"
+          [opciones]="opcionesProductos()"
+          [seleccionado]="productoSeleccionado()"
+          [(abierto)]="selectorAbierto"
+          (seleccion)="asignarProducto($event)"
+        />
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <app-selector-modal
+    titulo="Gestionar proveedores"
+    [opciones]="opcionesProveedores()"
+    [seleccionado]="null"
+    [conAcciones]="esAdmin()"
+    [(abierto)]="selectorProveedoresAbierto"
+    (editar)="editarProveedor($event)"
+    (eliminar)="confirmarEliminarProveedor($event)"
+  />
+</ion-content>

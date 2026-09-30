@@ -1,0 +1,8 @@
+<app-page-header [title]="module()?.nombre ?? 'Módulo'" />
+
+<ion-content [fullscreen]="true">
+  <app-empty-state
+    [icono]="module()?.icono ?? 'construct-outline'"
+    mensaje="Módulo en construcción. Se desarrollará en los siguientes pasos."
+  />
+</ion-content>

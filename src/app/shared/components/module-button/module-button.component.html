@@ -1,0 +1,6 @@
+<button type="button" class="module-btn" (click)="abrir()" [style.--module-color]="module().color">
+  <span class="circle">
+    <app-icon [name]="module().icono" />
+  </span>
+  <span class="label">{{ module().nombre }}</span>
+</button>

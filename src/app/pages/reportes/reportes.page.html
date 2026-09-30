@@ -1,0 +1,83 @@
+<app-page-header title="Reportes" />
+
+<ion-content [fullscreen]="true">
+  <app-filtro-fecha [(fecha)]="fechaFiltro" [usuarios]="usuarios()" [(usuarioId)]="usuarioSeleccionado" />
+
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (!resumen()) {
+    <app-empty-state icono="ms:bar_chart" mensaje="No hay datos para mostrar todavía." />
+  } @else {
+    @for (grupo of gruposDe(resumen()); track grupo.titulo) {
+      <div class="tarjeta">
+        <div class="tarjeta-titulo">
+          <app-icon [name]="grupo.icono" />
+          <span>{{ grupo.titulo }}</span>
+        </div>
+        @for (metrica of grupo.metricas; track metrica.etiqueta) {
+          <div class="fila">
+            <span>{{ metrica.etiqueta }}</span>
+            <b [class.success]="metrica.color === 'success'" [class.danger]="metrica.color === 'danger'" [class.warning]="metrica.color === 'warning'">
+              {{ metrica.valor }}
+            </b>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">
+        <app-icon name="ms:groups" />
+        <span>Actividad por usuario</span>
+      </div>
+
+      @if (gruposActividad().length === 0) {
+        <p class="vacio">Sin actividad registrada para este filtro.</p>
+      } @else {
+        @for (grupo of gruposActividad(); track grupo.titulo) {
+          <div class="grupo-actividad">
+            <div class="grupo-cabecera">
+              <app-icon [name]="grupo.icono" />
+              <span>{{ grupo.titulo }}</span>
+            </div>
+            @for (metrica of grupo.metricas; track metrica.etiqueta) {
+              <div class="fila">
+                <span>{{ metrica.etiqueta }}</span>
+                <b [class.success]="metrica.color === 'success'" [class.danger]="metrica.color === 'danger'" [class.warning]="metrica.color === 'warning'">
+                  {{ metrica.valor }}
+                </b>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">
+        <app-icon name="ms:inventory" />
+        <span>Inventario</span>
+      </div>
+      @if (resumen(); as r) {
+        <div class="fila clicable" (click)="toggleInventario()">
+          <span>Productos con stock bajo</span>
+          <b [class.danger]="r.productosStockBajo > 0">{{ r.productosStockBajo }}</b>
+        </div>
+        @if (inventarioAbierto()) {
+          <div class="lista-stock-bajo">
+            @for (p of r.productosStockBajoLista; track p.id) {
+              <div class="fila-producto">
+                <span class="nombre">{{ p.nombre }}</span>
+                <span class="cantidades">Stock {{ p.stock }} · Mín {{ p.stock_minimo }}</span>
+              </div>
+            } @empty {
+              <p class="vacio">No hay productos con stock bajo.</p>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</ion-content>

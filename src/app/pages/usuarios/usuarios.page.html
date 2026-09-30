@@ -1,0 +1,118 @@
+<app-page-header title="Usuarios" />
+
+<ion-content [fullscreen]="true">
+  <div class="seccion">
+    <span class="titulo">Gestión de usuarios</span>
+    <ion-button size="small" fill="outline" (click)="toggleFormulario()">
+      <ion-icon slot="start" name="person-add"></ion-icon>
+      Nuevo
+    </ion-button>
+  </div>
+
+  @if (formularioAbierto()) {
+    <ion-list class="tarjeta" lines="full">
+      <ion-item>
+        <ion-input
+          label="Usuario"
+          labelPlacement="stacked"
+          placeholder="nombre.usuario"
+          [(ngModel)]="nuevoUsuario"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          label="Nombre"
+          labelPlacement="stacked"
+          placeholder="Nombre completo"
+          [(ngModel)]="nuevoNombre"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          label="Contraseña"
+          labelPlacement="stacked"
+          placeholder="Mínimo 4 caracteres"
+          [type]="mostrarClave ? 'text' : 'password'"
+          [(ngModel)]="nuevaClave"
+        ></ion-input>
+        <ion-button fill="clear" slot="end" type="button" (click)="toggleMostrarClave()" aria-label="Mostrar u ocultar contraseña">
+          <ion-icon slot="icon-only" [name]="mostrarClave ? 'eye-off' : 'eye'"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          label="Confirmar contraseña"
+          labelPlacement="stacked"
+          [type]="mostrarClave ? 'text' : 'password'"
+          [(ngModel)]="confirmarClave"
+        ></ion-input>
+        <ion-button fill="clear" slot="end" type="button" (click)="toggleMostrarClave()" aria-label="Mostrar u ocultar contraseña">
+          <ion-icon slot="icon-only" [name]="mostrarClave ? 'eye-off' : 'eye'"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-select
+          label="Rol"
+          labelPlacement="stacked"
+          interface="action-sheet"
+          cancelText="Cancelar"
+          [(ngModel)]="nuevoRol"
+        >
+          <ion-select-option value="operador">Operador</ion-select-option>
+          <ion-select-option value="admin">Administrador</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-button slot="end" fill="solid" class="btn-guardar" [disabled]="guardando" (click)="crear()">
+          Guardar
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  }
+
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (usuarios().length === 0) {
+    <app-empty-state icono="ms:person" mensaje="No hay usuarios registrados." />
+  } @else {
+    <ion-list class="tarjeta" lines="full">
+      @for (u of usuarios(); track u.id) {
+        <ion-item [class.item-inactivo]="!estaActivo(u)">
+          <ion-icon slot="start" name="person" [color]="estaActivo(u) ? 'medium' : 'danger'"></ion-icon>
+          <ion-label>
+            <h2>
+              {{ u.nombre }}
+              @if (u.rol === 'admin') {
+                <ion-badge color="success">Admin</ion-badge>
+              }
+              @if (!estaActivo(u)) {
+                <ion-badge color="danger">Inactivo</ion-badge>
+              }
+            </h2>
+            <p>{{ u.usuario }}</p>
+          </ion-label>
+          <ion-button
+            slot="end"
+            fill="clear"
+            [color]="estaActivo(u) ? 'danger' : 'success'"
+            (click)="cambiarEstado(u)"
+            [ariaLabel]="estaActivo(u) ? 'Desactivar usuario' : 'Activar usuario'"
+          >
+            <ion-icon slot="icon-only" [name]="estaActivo(u) ? 'person-remove' : 'checkmark-circle-outline'"></ion-icon>
+          </ion-button>
+          <ion-button
+            slot="end"
+            fill="clear"
+            color="medium"
+            (click)="confirmarEliminar(u)"
+            aria-label="Eliminar usuario"
+          >
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

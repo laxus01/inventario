@@ -1,0 +1,21 @@
+.resumen b {
+  color: var(--ion-color-success);
+}
+
+.detalle {
+  .fila {
+    .entrada {
+      color: var(--ion-color-success);
+      font-weight: var(--app-font-weight-semibold);
+    }
+
+    .salida {
+      color: var(--ion-color-danger);
+      font-weight: var(--app-font-weight-semibold);
+    }
+
+    .motivo {
+      color: var(--ion-color-medium);
+    }
+  }
+}

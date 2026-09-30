@@ -1,0 +1,21 @@
+.total {
+  text-align: end;
+  font-size: var(--app-font-size-base);
+
+  b {
+    color: var(--ion-color-danger);
+  }
+}
+
+.total-modal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--app-space-4) 20px 32px;
+  font-size: var(--app-font-size-lg);
+
+  b {
+    font-size: 20px;
+    color: var(--ion-color-success);
+  }
+}

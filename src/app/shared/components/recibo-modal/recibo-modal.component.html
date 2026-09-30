@@ -1,0 +1,75 @@
+<ion-modal [isOpen]="abierto()" (didDismiss)="cerrar()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cerrar()">Cerrar</ion-button>
+        </ion-buttons>
+        <ion-title>Vista previa del recibo</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="recibo-wrap">
+        <div class="recibo">
+          <div class="recibo-centro">
+            <div class="recibo-titulo">RECIBO DE VENTA</div>
+            <div>Venta #{{ venta().id }}</div>
+            <div>{{ fecha() }}</div>
+          </div>
+
+          <div class="recibo-sep">--------------------------------</div>
+
+          @for (l of lineas(); track $index) {
+            <div class="recibo-linea">
+              <span class="recibo-nombre">{{ l.nombre }}</span>
+              <span class="recibo-monto">{{ l.subtotal | formatoValor }}</span>
+            </div>
+            <div class="recibo-sublinea">
+              {{ l.cantidad | formatoEntero }} {{ l.unidad ? l.unidad + ' ×' : '×' }} {{ l.precio | formatoValor }}
+            </div>
+          }
+
+          <div class="recibo-sep">--------------------------------</div>
+
+          <div class="recibo-linea recibo-total">
+            <span>TOTAL</span>
+            <span>{{ venta().total | formatoValor }}</span>
+          </div>
+
+          <div class="recibo-sep">--------------------------------</div>
+
+          <div class="recibo-linea">
+            <span>{{ metodoLabel() }}</span>
+          </div>
+          @if (venta().metodo_pago === 'mixto') {
+            @for (p of pagos(); track p.id) {
+              <div class="recibo-sublinea">{{ p.metodo === 'efectivo' ? 'Efectivo' : 'Transferencia' }}: {{ p.monto | formatoValor }}</div>
+            }
+            @if (credito() > 0) {
+              <div class="recibo-sublinea">Crédito: {{ credito() | formatoValor }}</div>
+            }
+          }
+          @if (!venta().metodo_pago) {
+            <div class="recibo-sublinea">Cliente: {{ clienteNombre() ?? '—' }}</div>
+          }
+
+          @if (venta().nota) {
+            <div class="recibo-sep">--------------------------------</div>
+            <div class="recibo-nota">{{ venta().nota }}</div>
+          }
+
+          <div class="recibo-sep"></div>
+          <div class="recibo-centro recibo-pie">¡Gracias por su compra!</div>
+        </div>
+      </div>
+    </ion-content>
+    <ion-footer>
+      <ion-toolbar>
+        <ion-button expand="block" (click)="imprimir.emit()">
+          <ion-icon slot="start" name="print"></ion-icon>
+          Imprimir
+        </ion-button>
+      </ion-toolbar>
+    </ion-footer>
+  </ng-template>
+</ion-modal>

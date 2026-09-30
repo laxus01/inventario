@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+.module-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  .circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--app-surface);
+    border: 2px solid var(--module-color);
+    box-shadow: var(--app-shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    font-size: 32px;
+    color: var(--module-color);
+  }
+
+  .label {
+    font-size: var(--app-font-size-md);
+    color: var(--app-text-muted);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  &:active .circle {
+    transform: scale(0.93);
+    box-shadow: var(--app-shadow-md);
+  }
+}

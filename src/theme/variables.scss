@@ -1,0 +1,119 @@
+// Tema "La Neverita" — Ionic theming
+// https://ionicframework.com/docs/theming/
+
+:root {
+  /* Colores principales */
+  --ion-color-primary: #22c55e;
+  --ion-color-primary-rgb: 34, 197, 94;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1ead53;
+  --ion-color-primary-tint: #38cb6e;
+
+  --ion-color-secondary: #38b2f6;
+  --ion-color-secondary-rgb: 56, 178, 246;
+  --ion-color-secondary-contrast: #0b0b0d;
+  --ion-color-secondary-contrast-rgb: 11, 11, 13;
+  --ion-color-secondary-shade: #319dd8;
+  --ion-color-secondary-tint: #4cbaf7;
+
+  --ion-color-tertiary: #38b2f6;
+  --ion-color-tertiary-rgb: 56, 178, 246;
+  --ion-color-tertiary-contrast: #0b0b0d;
+  --ion-color-tertiary-contrast-rgb: 11, 11, 13;
+  --ion-color-tertiary-shade: #319dd8;
+  --ion-color-tertiary-tint: #4cbaf7;
+
+  --ion-color-success: #22c55e;
+  --ion-color-success-rgb: 34, 197, 94;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #1ead53;
+  --ion-color-success-tint: #38cb6e;
+
+  --ion-color-warning: #f59e0b;
+  --ion-color-warning-rgb: 245, 158, 11;
+  --ion-color-warning-contrast: #0b0b0d;
+  --ion-color-warning-contrast-rgb: 11, 11, 13;
+  --ion-color-warning-shade: #d88b0a;
+  --ion-color-warning-tint: #f6a723;
+
+  --ion-color-danger: #ef4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #d23c3c;
+  --ion-color-danger-tint: #f15757;
+
+  --ion-color-medium: #7a7a80;
+  --ion-color-medium-rgb: 122, 122, 128;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #6b6b71;
+  --ion-color-medium-tint: #87878d;
+
+  --ion-color-light: #f5f5f5;
+  --ion-color-light-rgb: 245, 245, 245;
+  --ion-color-light-contrast: #0b0b0d;
+  --ion-color-light-contrast-rgb: 11, 11, 13;
+  --ion-color-light-shade: #d8d8d8;
+  --ion-color-light-tint: #f6f6f6;
+
+  /* Texto: primario oscuro, secundario gris */
+  --ion-color-dark: #0b0b0d;
+  --ion-color-dark-rgb: 11, 11, 13;
+  --ion-color-dark-contrast: #f8f500;
+  --ion-color-dark-contrast-rgb: 248, 245, 0;
+  --ion-color-dark-shade: #0a0a0c;
+  --ion-color-dark-tint: #232325;
+
+  /* Fondo y superficies (tema claro) */
+  --ion-background-color: #f7f8f7;
+  --ion-background-color-rgb: 247, 248, 247;
+  --ion-text-color: #0b0b0d;
+  --ion-text-color-rgb: 11, 11, 13;
+  --ion-toolbar-background: #ffffff;
+  --ion-toolbar-color: #0b0b0d;
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-border-color: #e5e7e5;
+
+  /* Tokens de la app */
+  --app-surface: #ffffff;
+  --app-surface-2: #f0f1f0;
+  --app-border: #e5e7e5;
+  --app-text-muted: #6b6b70;
+
+  /* Amarillo de marca: puro para acentos sobre fondos oscuros,
+     variante oscurecida para texto/iconos sobre fondos claros (contraste 5.6:1) */
+  --app-yellow: #f8f500;
+  --app-yellow-text: #6b6a00;
+
+  /* Radios */
+  --app-radius-sm: 10px;
+  --app-radius-md: 14px;
+  --app-radius-lg: 20px;
+
+  /* Elevaciones */
+  --app-shadow-sm: 0 1px 3px rgba(11, 11, 13, 0.08), 0 1px 2px rgba(11, 11, 13, 0.06);
+  --app-shadow-md: 0 2px 8px rgba(11, 11, 13, 0.08), 0 1px 3px rgba(11, 11, 13, 0.06);
+
+  /* Espaciado */
+  --app-space-1: 4px;
+  --app-space-2: 8px;
+  --app-space-3: 12px;
+  --app-space-4: 16px;
+  --app-space-5: 24px;
+
+  /* Escala tipográfica */
+  --app-font-size-xs: 12px;
+  --app-font-size-sm: 13px;
+  --app-font-size-md: 14px;
+  --app-font-size-base: 15px;
+  --app-font-size-lg: 17px;
+  --app-font-size-xl: 22px;
+  --app-font-weight-semibold: 600;
+
+  /* Tipografía */
+  --ion-font-family: 'Inter', sans-serif;
+}
