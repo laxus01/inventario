@@ -52,7 +52,7 @@
                 @for (a of abonosCuenta; track a.id) {
                   <div class="fila">
                     <span class="abono">+{{ a.valor | formatoValor }}</span>
-                    <span class="fecha">{{ a.created_at?.slice(0, 10) }}</span>
+                    <span class="fecha">{{ fechaLocalIso(a.created_at) }}</span>
                     @if (esAdmin()) {
                       <ion-button fill="clear" size="small" color="danger" (click)="confirmarEliminarAbono(c, a, $event)" aria-label="Eliminar abono">
                         <ion-icon slot="icon-only" name="trash"></ion-icon>

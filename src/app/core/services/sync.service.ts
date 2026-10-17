@@ -29,6 +29,9 @@ interface ConfigTabla {
   insertar: string;
   actualizar: string;
   fks?: string[];
+  /** FKs opcionales que en SQLite se guardan como 0 ("sin registro") y en el
+   *  servidor como NULL; al recibir hay que traducir NULL de vuelta a 0. */
+  ceros?: string[];
   numericos?: string[];
   booleanos?: string[];
   fechas?: string[];
@@ -37,6 +40,21 @@ interface ConfigTabla {
 const F = (col: string) => `strftime('%Y-%m-%dT%H:%M:%SZ', ${col})`;
 
 const CONFIG: Record<string, ConfigTabla> = {
+  bases: {
+    campos: ['fecha', 'base_efectivo', 'base_cuenta', 'usuario_id', 'deleted_at', 'created_at', 'updated_at'],
+    seleccion: `
+      SELECT b.uuid AS id, b.fecha, b.base_efectivo, b.base_cuenta, u.uuid AS usuario_id,
+             CASE WHEN b.deleted_at IS NULL THEN NULL
+                  ELSE strftime('%Y-%m-%dT%H:%M:%SZ', b.deleted_at) END AS deleted_at,
+             ${F('b.created_at')} AS created_at, ${F('b.updated_at')} AS updated_at
+      FROM bases b LEFT JOIN usuarios u ON u.id = b.usuario_id
+      WHERE b.updated_at > ?`,
+    insertar: 'INSERT INTO bases (uuid, fecha, base_efectivo, base_cuenta, usuario_id, deleted_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    actualizar: 'UPDATE bases SET fecha = ?, base_efectivo = ?, base_cuenta = ?, usuario_id = ?, deleted_at = ?, created_at = ?, updated_at = ? WHERE id = ?',
+    fks: ['usuario_id'],
+    numericos: ['base_efectivo', 'base_cuenta'],
+    fechas: ['created_at', 'updated_at', 'deleted_at'],
+  },
   categorias: {
     campos: ['nombre', 'descripcion', 'usuario_id', 'created_at', 'updated_at'],
     seleccion: `
@@ -288,6 +306,7 @@ const CONFIG: Record<string, ConfigTabla> = {
     actualizar: `UPDATE cuentas_cobrar SET venta_id = ?, cliente_id = ?, concepto = ?, total = ?, usuario_id = ?, deleted_at = ?, created_at = ?, updated_at = ?
        WHERE id = ?`,
     fks: ['venta_id', 'cliente_id', 'usuario_id'],
+    ceros: ['venta_id'],
     numericos: ['total'],
     fechas: ['created_at', 'updated_at', 'deleted_at'],
   },
@@ -327,6 +346,7 @@ const CONFIG: Record<string, ConfigTabla> = {
     actualizar: `UPDATE cuentas_pagar SET compra_id = ?, proveedor_id = ?, concepto = ?, total = ?, usuario_id = ?, deleted_at = ?, created_at = ?, updated_at = ?
        WHERE id = ?`,
     fks: ['compra_id', 'proveedor_id', 'usuario_id'],
+    ceros: ['compra_id'],
     numericos: ['total'],
     fechas: ['created_at', 'updated_at', 'deleted_at'],
   },
@@ -366,6 +386,7 @@ const ORDEN_TABLAS = ['usuarios', ...Object.keys(CONFIG).filter((t) => t !== 'us
 
 /** Tabla padre a la que apunta cada llave foránea de cada tabla. */
 const TABLA_FK: Record<string, Record<string, string>> = {
+  bases: { usuario_id: 'usuarios' },
   categorias: { usuario_id: 'usuarios' },
   proveedores: { usuario_id: 'usuarios' },
   clientes: { usuario_id: 'usuarios' },
@@ -444,7 +465,12 @@ export class SyncService {
     mapaFks: Map<string, number>,
   ): unknown {
     if (cfg.fks?.includes(campo)) {
-      if (valor == null) return null;
+      if (valor == null) {
+        // "Sin registro": en el servidor es NULL, en SQLite se guarda 0
+        // (la columna es NOT NULL; p. ej. cuentas_cobrar.venta_id).
+        if (cfg.ceros?.includes(campo)) return 0;
+        return null;
+      }
       const localId = mapaFks.get(String(valor));
       if (localId == null) {
         // usuario_id es auditoría (quién creó la fila): si la referencia no

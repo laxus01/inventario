@@ -79,6 +79,13 @@
         <p>{{ ultimaSync() ? 'Última sync: ' + ultimaSync() : 'Nunca se ha sincronizado' }}</p>
       </ion-label>
     </ion-item>
+    <ion-item button detail="false" (click)="confirmarReenvio()">
+      <ion-icon slot="start" name="refresh" color="medium"></ion-icon>
+      <ion-label>
+        <h2>Reenviar todos los datos</h2>
+        <p>Sube a la base de datos todo el contenido local, incluso lo ya sincronizado. Úsalo si al servidor le faltan datos que este dispositivo conserva.</p>
+      </ion-label>
+    </ion-item>
   </ion-list>
 
   <div class="seccion">

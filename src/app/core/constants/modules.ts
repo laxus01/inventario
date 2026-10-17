@@ -13,6 +13,7 @@ export const MODULES: AppModule[] = [
   { id: 'inventario', nombre: 'Inventario', icono: 'ms:inventory', color: '#f8f500', ruta: '/inventario' },
   { id: 'cuentas-por-cobrar', nombre: 'Cuentas por Cobrar', icono: 'ms:account_balance_wallet', color: 'var(--ion-color-success)', ruta: '/cuentas-por-cobrar' },
   { id: 'cuentas-por-pagar', nombre: 'Cuentas por Pagar', icono: 'ms:credit_card', color: 'var(--ion-color-danger)', ruta: '/cuentas-por-pagar' },
+  { id: 'bases', nombre: 'Bases', icono: 'ms:savings', color: 'var(--ion-color-primary)', ruta: '/bases' },
   { id: 'reportes', nombre: 'Reportes', icono: 'ms:bar_chart', color: '#f8f500', ruta: '/reportes' },
   { id: 'usuarios', nombre: 'Usuarios', icono: 'ms:manage_accounts', color: 'var(--ion-color-primary)', ruta: '/usuarios' },
   { id: 'ajustes', nombre: 'Ajustes', icono: 'ms:settings', color: 'var(--ion-color-danger)', ruta: '/ajustes' },

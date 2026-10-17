@@ -30,7 +30,7 @@ import { CuentasPagarService } from '../../core/services/cuentas-pagar.service';
 import { ProductoService } from '../../core/services/producto.service';
 import { SqliteService } from '../../core/services/sqlite.service';
 import { ToastService } from '../../core/services/toast.service';
-import { agruparPorFecha, etiquetaFecha } from '../../core/utils/fechas';
+import { agruparPorFecha, etiquetaFecha, fechaLocalIso } from '../../core/utils/fechas';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { InputValorComponent } from '../../shared/components/input-valor/input-valor.component';
@@ -94,13 +94,13 @@ export class ComprasPage {
     const usuario = this.usuarioFiltro();
     return this.compras().filter(
       (c) =>
-        (!filtro || (c.created_at?.slice(0, 10) ?? '') === filtro) &&
+        (!filtro || fechaLocalIso(c.created_at) === filtro) &&
         (usuario == null || c.usuario_id === usuario),
     );
   });
 
   readonly comprasPorFecha = computed(() =>
-    agruparPorFecha(this.comprasFiltradas(), (c) => c.created_at?.slice(0, 10)),
+    agruparPorFecha(this.comprasFiltradas(), (c) => fechaLocalIso(c.created_at)),
   );
 
   etiquetaFecha(fecha: string): string {

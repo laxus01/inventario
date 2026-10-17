@@ -206,4 +206,31 @@ export class AjustesPage {
       await this.toast.error('No se pudieron eliminar los datos');
     }
   }
+
+  async confirmarReenvio(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Reenviar todos los datos',
+      message:
+        'La próxima sincronización subirá al servidor TODO el contenido local de este dispositivo (productos, presentaciones, ventas, compras, cuentas...). Úsalo si el servidor quedó vacío o le faltan datos que este dispositivo conserva.',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Reenviar',
+          handler: () => void this.reenviarTodo(),
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async reenviarTodo(): Promise<void> {
+    try {
+      await this.sqlite.setSyncEstado({ last_push: null });
+      await this.toast.exito(
+        'Listo: presiona "Sincronizar ahora" para subir todo el contenido local al servidor',
+      );
+    } catch {
+      await this.toast.error('No se pudo preparar el reenvío');
+    }
+  }
 }

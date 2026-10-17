@@ -26,6 +26,7 @@ import { InventarioService } from '../../core/services/inventario.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ProductoService } from '../../core/services/producto.service';
 import { ToastService } from '../../core/services/toast.service';
+import { fechaLocalIso } from '../../core/utils/fechas';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { InputValorComponent } from '../../shared/components/input-valor/input-valor.component';
@@ -70,6 +71,7 @@ export class InventarioPage {
   private readonly alertCtrl = inject(AlertController);
 
   readonly productos = signal<Producto[]>([]);
+  readonly fechaLocalIso = fechaLocalIso;
   readonly lotes = signal<Record<number, Lote[]>>({});
   readonly movimientos = signal<Record<number, Movimiento[]>>({});
   readonly valorTotal = signal(0);

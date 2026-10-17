@@ -9,6 +9,7 @@ import {
   AbonoCobrar,
   AbonoPagar,
   ActividadUsuario,
+  BaseCaja,
   Categoria,
   Cliente,
   Compra,
@@ -28,6 +29,7 @@ import {
   Venta,
   VentaDetalle,
 } from '../../models/inventario.models';
+import { hoyIso, rangoDiaUtc } from '../utils/fechas';
 
 const DB_NAME = 'inventario_db';
 
@@ -188,6 +190,16 @@ CREATE TABLE IF NOT EXISTS pagos_pagar (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS bases (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fecha TEXT NOT NULL,
+  base_efectivo REAL NOT NULL DEFAULT 0,
+  base_cuenta REAL NOT NULL DEFAULT 0,
+  deleted_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS usuarios (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   usuario TEXT NOT NULL UNIQUE,
@@ -226,9 +238,11 @@ CREATE INDEX IF NOT EXISTS idx_cuentas_cobrar_cliente ON cuentas_cobrar(cliente_
 CREATE INDEX IF NOT EXISTS idx_abonos_cobrar_cuenta ON abonos_cobrar(cuenta_id);
 CREATE INDEX IF NOT EXISTS idx_cuentas_pagar_proveedor ON cuentas_pagar(proveedor_id);
 CREATE INDEX IF NOT EXISTS idx_pagos_pagar_cuenta ON pagos_pagar(cuenta_id);
+CREATE INDEX IF NOT EXISTS idx_bases_fecha ON bases(fecha);
 `;
 
 const TABLAS = [
+  'bases',
   'abonos_cobrar',
   'cuentas_cobrar',
   'pagos_pagar',
@@ -251,6 +265,7 @@ const TABLAS = [
 ];
 
 const TABLAS_NEGOCIO = [
+  'bases',
   'abonos_cobrar',
   'cuentas_cobrar',
   'pagos_pagar',
@@ -271,6 +286,7 @@ const TABLAS_NEGOCIO = [
 
 /** Tablas que se sincronizan con el backend (sin sesion ni sync_estado). */
 const TABLAS_SYNC = [
+  'bases',
   'categorias',
   'proveedores',
   'clientes',
@@ -612,6 +628,21 @@ export class SqliteService {
     return this.query<Movimiento>(statement, productoId ? [productoId] : []);
   }
 
+  /** Indica si el producto participa en compras o ventas activas (no anuladas). */
+  async productoTieneTransacciones(productoId: number): Promise<boolean> {
+    const rows = await this.query<{ n: number }>(
+      `SELECT
+         (SELECT COUNT(*) FROM compra_detalle d
+          JOIN compras c ON c.id = d.compra_id
+          WHERE d.producto_id = ? AND d.deleted_at IS NULL AND c.deleted_at IS NULL) +
+         (SELECT COUNT(*) FROM venta_detalle v
+          JOIN ventas ve ON ve.id = v.venta_id
+          WHERE v.producto_id = ? AND v.deleted_at IS NULL AND ve.deleted_at IS NULL) AS n`,
+      [productoId, productoId],
+    );
+    return (rows[0]?.n ?? 0) > 0;
+  }
+
   async addLote(lote: Omit<Lote, 'id'>): Promise<number> {
     return this.run(
       `INSERT INTO lotes (producto_id, cantidad_inicial, cantidad_restante, costo_unitario, usuario_id)
@@ -728,6 +759,14 @@ export class SqliteService {
     await this.run(
       'UPDATE compras SET proveedor_id = ?, total = ? WHERE id = ?',
       [proveedorId, total, compraId],
+    );
+  }
+
+  /** Borrado lógico de los detalles de una compra (usado al editarla). */
+  async eliminarCompraDetalles(compraId: number): Promise<void> {
+    await this.run(
+      "UPDATE compra_detalle SET deleted_at = datetime('now') WHERE compra_id = ? AND deleted_at IS NULL",
+      [compraId],
     );
   }
 
@@ -940,9 +979,9 @@ export class SqliteService {
   async getCuentasCobrar(fecha?: string | null, usuarioId?: number | null): Promise<CuentaCobrar[]> {
     const condiciones: string[] = [];
     const params: (string | number)[] = [];
-    if (fecha) condiciones.push('date(cc.created_at) = ?');
+    if (fecha) condiciones.push('cc.created_at >= ? AND cc.created_at < ?');
     if (usuarioId != null) condiciones.push('cc.usuario_id = ?');
-    if (fecha) params.push(fecha);
+    if (fecha) params.push(...rangoDiaUtc(fecha));
     if (usuarioId != null) params.push(usuarioId);
     const filtro = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
     return this.query<CuentaCobrar>(
@@ -1023,10 +1062,10 @@ export class SqliteService {
   async getCuentasPagar(fecha?: string | null, usuarioId?: number | null): Promise<CuentaPagar[]> {
     const condiciones: string[] = [];
     const params: (string | number)[] = [];
-    if (fecha) condiciones.push('date(cp.created_at) = ?');
+    if (fecha) condiciones.push('cp.created_at >= ? AND cp.created_at < ?');
     if (usuarioId != null) condiciones.push('cp.usuario_id = ?');
     const filtro = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
-    if (fecha) params.push(fecha);
+    if (fecha) params.push(...rangoDiaUtc(fecha));
     if (usuarioId != null) params.push(usuarioId);
     return this.query<CuentaPagar>(
       `SELECT cp.*, pr.nombre AS proveedor_nombre,
@@ -1086,6 +1125,59 @@ export class SqliteService {
     await this.run(
       "UPDATE pagos_pagar SET deleted_at = datetime('now') WHERE id = ?",
       [pagoId],
+    );
+  }
+
+  // ===== Bases de caja (vueltos) =====
+
+  async addBase(base: Omit<BaseCaja, 'id'>): Promise<number> {
+    return this.run(
+      'INSERT INTO bases (fecha, base_efectivo, base_cuenta, usuario_id) VALUES (?, ?, ?, ?)',
+      [base.fecha, base.base_efectivo, base.base_cuenta, this.usuarioId],
+    );
+  }
+
+  async getBases(fecha?: string | null, usuarioId?: number | null): Promise<BaseCaja[]> {
+    const condiciones: string[] = ['b.deleted_at IS NULL'];
+    const params: (string | number)[] = [];
+    if (fecha) {
+      condiciones.push('b.fecha = ?');
+      params.push(fecha);
+    }
+    if (usuarioId != null) {
+      condiciones.push('b.usuario_id = ?');
+      params.push(usuarioId);
+    }
+    return this.query<BaseCaja>(
+      `SELECT b.id, b.fecha, b.base_efectivo, b.base_cuenta, b.usuario_id, u.nombre AS usuario_nombre, b.created_at
+       FROM bases b LEFT JOIN usuarios u ON u.id = b.usuario_id
+       WHERE ${condiciones.join(' AND ')}
+       ORDER BY b.fecha DESC, b.id DESC`,
+      params,
+    );
+  }
+
+  /** Base total registrada para un día (suma si hay varias del mismo día). */
+  async getBasePorFecha(fecha: string, usuarioId?: number | null): Promise<{ efectivo: number; cuenta: number }> {
+    const condiciones: string[] = ['deleted_at IS NULL', 'fecha = ?'];
+    const params: (string | number)[] = [fecha];
+    if (usuarioId != null) {
+      condiciones.push('usuario_id = ?');
+      params.push(usuarioId);
+    }
+    const rows = await this.query<{ efectivo: number; cuenta: number }>(
+      `SELECT COALESCE(SUM(base_efectivo), 0) AS efectivo, COALESCE(SUM(base_cuenta), 0) AS cuenta
+       FROM bases WHERE ${condiciones.join(' AND ')}`,
+      params,
+    );
+    return rows[0] ?? { efectivo: 0, cuenta: 0 };
+  }
+
+  /** Borrado lógico de la base (propaga la sync). */
+  async eliminarBase(baseId: number): Promise<void> {
+    await this.run(
+      "UPDATE bases SET deleted_at = datetime('now') WHERE id = ?",
+      [baseId],
     );
   }
 
@@ -1508,21 +1600,15 @@ export class SqliteService {
   }
 
   async getResumenVentasHoy(usuarioId?: number | null): Promise<{ total: number; ganancia: number; cantidad: number }> {
-    const filtro = usuarioId != null ? 'AND usuario_id = ?' : '';
-    const rows = await this.query<{ total: number; ganancia: number; cantidad: number }>(
-      `SELECT COALESCE(SUM(total), 0) AS total, COALESCE(SUM(ganancia), 0) AS ganancia, COUNT(*) AS cantidad
-       FROM ventas WHERE date(created_at) = date('now') AND deleted_at IS NULL ${filtro}`,
-      usuarioId != null ? [usuarioId] : [],
-    );
-    return rows[0] ?? { total: 0, ganancia: 0, cantidad: 0 };
+    return this.getResumenVentas(hoyIso(), usuarioId);
   }
 
   async getRecaudoPorMetodo(fecha?: string | null, usuarioId?: number | null): Promise<{ efectivo: number; transferencia: number }> {
     const condiciones: string[] = ['vp.deleted_at IS NULL', 'v.deleted_at IS NULL'];
     const params: (string | number)[] = [];
     if (fecha) {
-      condiciones.push('date(v.created_at) = ?');
-      params.push(fecha);
+      condiciones.push('v.created_at >= ? AND v.created_at < ?');
+      params.push(...rangoDiaUtc(fecha));
     }
     if (usuarioId != null) {
       condiciones.push('v.usuario_id = ?');
@@ -1559,8 +1645,8 @@ export class SqliteService {
     const condiciones: string[] = ['deleted_at IS NULL'];
     const params: (string | number)[] = [];
     if (fecha) {
-      condiciones.push('date(created_at) = ?');
-      params.push(fecha);
+      condiciones.push('created_at >= ? AND created_at < ?');
+      params.push(...rangoDiaUtc(fecha));
     }
     if (usuarioId != null) {
       condiciones.push('usuario_id = ?');
@@ -1605,11 +1691,12 @@ export class SqliteService {
    * "(sin usuario)".
    */
   async getActividadPorUsuario(fecha?: string | null): Promise<ActividadUsuario[]> {
-    const filtro = fecha ? 'WHERE date(created_at) = ?' : '';
-    const params = fecha ? [fecha] : [];
+    const condicionFecha = 'created_at >= ? AND created_at < ?';
+    const filtro = fecha ? `WHERE ${condicionFecha}` : '';
+    const params = fecha ? rangoDiaUtc(fecha) : [];
     // Tablas con borrado lógico: se excluyen las filas eliminadas
     const filtroLogico = fecha
-      ? "WHERE deleted_at IS NULL AND date(created_at) = ?"
+      ? `WHERE deleted_at IS NULL AND ${condicionFecha}`
       : 'WHERE deleted_at IS NULL';
     const [ventas, compras, movimientos, productos, clientes, proveedores, categorias, cuentasCobrar, abonos, cuentasPagar, pagos, usuarios] =
       await Promise.all([

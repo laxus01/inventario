@@ -69,3 +69,27 @@ El APK se genera en `android/app/build/outputs/apk/release/app-release-unsigned.
 | `npm run build` | Compila la aplicación web (Angular) |
 | `npm test` | Ejecuta las pruebas unitarias |
 | `npm run lint` | Ejecuta el linter |
+
+## Fechas y zona horaria
+
+Las marcas `created_at`, `updated_at` y `deleted_at` se almacenan y sincronizan en
+UTC. Las pantallas, los recibos, las etiquetas Hoy/Ayer y los reportes usan la
+zona horaria local del celular o del navegador. El equipo debe tener configurada
+la zona correcta (para Colombia: `America/Bogota`, UTC-5).
+
+Por ejemplo, `2026-10-17 00:30:00` en SQLite representa las 7:30 p. m. del
+16 de octubre en Colombia y debe aparecer en los registros y reportes del dia 16.
+Los filtros convierten cada dia local en un rango UTC, sin modificar las fechas
+guardadas ni las marcas de sincronizacion.
+
+Esta correccion no requiere migraciones ni actualizar registros existentes.
+Para distribuirla, recompila y actualiza el cliente web o el APK; no requiere
+cambios en el backend.
+
+Pruebas de regresion de fechas (sin abrir ni modificar la base de datos), desde
+PowerShell:
+
+```powershell
+$env:TZ = "America/Bogota"
+npm test -- --watch=false --include="src/app/core/**/*.spec.ts"
+```

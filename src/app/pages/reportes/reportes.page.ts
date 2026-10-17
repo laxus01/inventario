@@ -91,6 +91,24 @@ export class ReportesPage implements OnInit {
     const etiquetaGananciaDia = conFiltro ? 'Ganancia del día' : 'Ganancia de hoy';
     return [
       {
+        titulo: 'Caja',
+        icono: 'ms:savings',
+        metricas: [
+          { etiqueta: 'Base en efectivo', valor: this.moneda(r.baseEfectivo) },
+          { etiqueta: 'Base en cuenta', valor: this.moneda(r.baseCuenta) },
+          {
+            etiqueta: 'Efectivo en caja (base + recaudo)',
+            valor: this.moneda(r.baseEfectivo + r.recaudoEfectivo),
+            color: 'success',
+          },
+          {
+            etiqueta: 'Saldo en cuenta (base + recaudo)',
+            valor: this.moneda(r.baseCuenta + r.recaudoTransferencia),
+            color: 'success',
+          },
+        ],
+      },
+      {
         titulo: 'Recaudo',
         icono: 'ms:payments',
         metricas: [

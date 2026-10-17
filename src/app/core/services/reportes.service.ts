@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { ActividadUsuario, ProductoStockBajo, Usuario } from '../../models/inventario.models';
+import { BasesService } from './bases.service';
 import { CuentasCobrarService } from './cuentas-cobrar.service';
 import { CuentasPagarService } from './cuentas-pagar.service';
 import { SqliteService } from './sqlite.service';
+import { hoyIso } from '../utils/fechas';
 
 export interface ResumenReportes {
   ventasTotal: number;
@@ -12,6 +14,8 @@ export interface ResumenReportes {
   ventasCantidad: number;
   recaudoEfectivo: number;
   recaudoTransferencia: number;
+  baseEfectivo: number;
+  baseCuenta: number;
   comprasTotal: number;
   porCobrar: number;
   porPagar: number;
@@ -24,11 +28,12 @@ export interface ResumenReportes {
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private readonly sqlite = inject(SqliteService);
+  private readonly bases = inject(BasesService);
   private readonly cuentasCobrar = inject(CuentasCobrarService);
   private readonly cuentasPagar = inject(CuentasPagarService);
 
   async obtenerResumen(fecha?: string | null, usuarioId?: number | null): Promise<ResumenReportes> {
-    const [ventas, ventasDia, recaudo, comprasTotal, porCobrar, porPagar, valorInventario, productosActivos, productosStockBajo, productosStockBajoLista] =
+    const [ventas, ventasDia, recaudo, comprasTotal, porCobrar, porPagar, valorInventario, productosActivos, productosStockBajo, productosStockBajoLista, base] =
       await Promise.all([
         this.sqlite.getResumenVentas(null, usuarioId),
         fecha ? this.sqlite.getResumenVentas(fecha, usuarioId) : this.sqlite.getResumenVentasHoy(usuarioId),
@@ -40,6 +45,7 @@ export class ReportesService {
         this.sqlite.getCantidadProductos(),
         this.sqlite.getProductosStockBajo(),
         this.sqlite.getProductosConStockBajo(),
+        this.bases.porFecha(fecha ?? hoyIso(), usuarioId),
       ]);
 
     const ventasTotales = fecha ? ventasDia : ventas;
@@ -52,6 +58,8 @@ export class ReportesService {
       gananciaHoy: ventasDia.ganancia,
       recaudoEfectivo: recaudo.efectivo,
       recaudoTransferencia: recaudo.transferencia,
+      baseEfectivo: base.efectivo,
+      baseCuenta: base.cuenta,
       comprasTotal,
       porCobrar,
       porPagar,

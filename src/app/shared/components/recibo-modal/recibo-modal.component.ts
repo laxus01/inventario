@@ -11,6 +11,7 @@ import {
   IonToolbar,
 } from '@ionic/angular';
 import { PagoVenta, Venta, VentaDetalle } from '../../../models/inventario.models';
+import { fechaHoraLocal } from '../../../core/utils/fechas';
 import { FormatoEnteroPipe, FormatoValorPipe } from '../../pipes/formato-valor.pipe';
 
 @Component({
@@ -61,11 +62,7 @@ export class ReciboModalComponent {
   });
 
   fecha(): string {
-    const cruda = this.venta().created_at ?? '';
-    const [fecha, hora] = cruda.split(' ');
-    if (!fecha) return cruda;
-    const [a, m, d] = fecha.split('-');
-    return `${d}/${m}/${a}${hora ? ' ' + hora.slice(0, 5) : ''}`;
+    return fechaHoraLocal(this.venta().created_at);
   }
 
   cerrar(): void {

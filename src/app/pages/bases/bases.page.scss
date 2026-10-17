@@ -1,0 +1,30 @@
+.resumen {
+  margin: 12px;
+  padding: 10px var(--app-space-4);
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 12px;
+
+  .resumen-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 14px;
+    color: var(--ion-color-medium);
+
+    b {
+      font-size: 15px;
+      color: var(--ion-color-dark);
+
+      &.success {
+        color: var(--ion-color-success);
+      }
+    }
+  }
+}
+
+.lista {
+  margin: 0 12px 12px;
+  border-radius: 12px;
+  overflow: hidden;
+}

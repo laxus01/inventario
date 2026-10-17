@@ -1,0 +1,119 @@
+<app-page-header title="Bases de Caja" />
+
+<ion-content [fullscreen]="true">
+  <app-filtro-fecha [(fecha)]="fechaFiltro" [usuarios]="usuarios()" [(usuarioId)]="usuarioFiltro" />
+
+  @if (cargando()) {
+    <div class="centrado">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (basesFiltradas().length === 0) {
+    <app-empty-state
+      icono="ms:savings"
+      [mensaje]="fechaFiltro()
+        ? 'No hay bases registradas para la fecha seleccionada.'
+        : 'No hay bases registradas. Registra la base entregada para operar el día.'"
+    />
+  } @else {
+    <div class="resumen">
+      <div class="resumen-fila">
+        <span>Base en efectivo</span>
+        <b class="success">{{ totalEfectivo() | formatoValor }}</b>
+      </div>
+      <div class="resumen-fila">
+        <span>Base en cuenta</span>
+        <b>{{ totalCuenta() | formatoValor }}</b>
+      </div>
+    </div>
+
+    @for (grupo of basesPorFecha(); track grupo.fecha) {
+      <div class="fecha-grupo">{{ etiquetaFecha(grupo.fecha) }}</div>
+      <ion-list class="lista">
+        @for (b of grupo.items; track b.id) {
+          <ion-item lines="full">
+            <ion-icon name="cash" slot="start" color="success"></ion-icon>
+            <ion-label>
+              <h2>
+                Efectivo {{ b.base_efectivo | formatoValor }}
+                · Cuenta {{ b.base_cuenta | formatoValor }}
+              </h2>
+              <p>
+                {{ b.usuario_nombre ?? 'Sin usuario' }}
+                @if (b.created_at) {
+                  · {{ fechaLocalIso(b.created_at) }}
+                }
+              </p>
+            </ion-label>
+            @if (esAdmin()) {
+              <ion-button slot="end" fill="clear" size="small" color="danger" (click)="confirmarEliminarBase(b)" aria-label="Eliminar base">
+                <ion-icon slot="icon-only" name="trash"></ion-icon>
+              </ion-button>
+            }
+          </ion-item>
+        }
+      </ion-list>
+    }
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="abrirNuevaBase()" aria-label="Nueva base">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-modal [isOpen]="modalAbierto()" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarModal()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Nueva base</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="guardarBase()" [strong]="true">Guardar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list lines="full">
+          <ion-item button detail="false" (click)="abrirCalendario()">
+            <ion-icon name="calendar" slot="start" color="primary"></ion-icon>
+            <ion-label>
+              <p>Fecha de la base</p>
+              <h2>{{ etiquetaFecha(nuevaFecha) }}</h2>
+            </ion-label>
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Base en efectivo" [(valor)]="nuevaEfectivo" />
+          </ion-item>
+          <ion-item>
+            <app-input-valor label="Base en cuenta" [(valor)]="nuevaCuenta" />
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="calendarioAbierto()" (didDismiss)="cerrarCalendario()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="cerrarCalendario()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Fecha de la base</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="aplicarFecha()" [strong]="true">Aplicar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-datetime
+          presentation="date"
+          [(ngModel)]="nuevaFecha"
+          locale="es-CO"
+        ></ion-datetime>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

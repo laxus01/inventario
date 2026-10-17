@@ -52,7 +52,7 @@
                 @for (p of pagosCuenta; track p.id) {
                   <div class="fila">
                     <span class="pago">-{{ p.valor | formatoValor }}</span>
-                    <span class="fecha">{{ p.created_at?.slice(0, 10) }}</span>
+                    <span class="fecha">{{ fechaLocalIso(p.created_at) }}</span>
                     @if (esAdmin()) {
                       <ion-button fill="clear" size="small" color="danger" (click)="confirmarEliminarPago(c, p, $event)" aria-label="Eliminar pago">
                         <ion-icon slot="icon-only" name="trash"></ion-icon>

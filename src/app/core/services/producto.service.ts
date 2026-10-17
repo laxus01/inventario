@@ -48,12 +48,12 @@ export class ProductoService {
   }
 
   /**
-   * Elimina el producto solo si no tiene movimientos (compras, ventas
-   * o ajustes) relacionados. Devuelve false si no es posible eliminarlo.
+   * Elimina el producto si no participa en compras o ventas activas (no
+   * anuladas). Los movimientos se conservan como historial de auditoría.
    */
   async eliminar(id: number): Promise<boolean> {
-    const movimientos = await this.sqlite.getMovimientos(id);
-    if (movimientos.length > 0) return false;
+    const tieneTransacciones = await this.sqlite.productoTieneTransacciones(id);
+    if (tieneTransacciones) return false;
     await this.sqlite.deleteProducto(id);
     return true;
   }

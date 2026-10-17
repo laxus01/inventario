@@ -41,7 +41,7 @@ import { SqliteService } from '../../core/services/sqlite.service';
 import { ToastService } from '../../core/services/toast.service';
 import { DatosRecibo, ImpresoraService } from '../../core/services/impresora.service';
 import { formatoValorEsCo } from '../../shared/pipes/formato-valor.pipe';
-import { etiquetaFecha } from '../../core/utils/fechas';
+import { etiquetaFecha, fechaHoraLocal, fechaLocalIso } from '../../core/utils/fechas';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { InputValorComponent } from '../../shared/components/input-valor/input-valor.component';
@@ -449,7 +449,7 @@ export class VentasPage {
   readonly ventasPorFecha = computed(() => {
     const mapa = new Map<string, Venta[]>();
     for (const venta of this.ventasFiltradas()) {
-      const fecha = venta.created_at?.slice(0, 10) ?? '';
+      const fecha = fechaLocalIso(venta.created_at);
       const lista = mapa.get(fecha) ?? [];
       lista.push(venta);
       mapa.set(fecha, lista);
@@ -470,7 +470,7 @@ export class VentasPage {
     const usuario = this.usuarioFiltro();
     return this.ventas().filter(
       (v) =>
-        (!filtro || (v.created_at?.slice(0, 10) ?? '') === filtro) &&
+        (!filtro || fechaLocalIso(v.created_at) === filtro) &&
         (usuario == null || v.usuario_id === usuario),
     );
   });
@@ -658,11 +658,7 @@ export class VentasPage {
   }
 
   private fechaRecibo(venta: Venta): string {
-    const cruda = venta.created_at ?? '';
-    const [fecha, hora] = cruda.split(' ');
-    if (!fecha) return cruda;
-    const [a, m, d] = fecha.split('-');
-    return `${d}/${m}/${a}${hora ? ' ' + hora.slice(0, 5) : ''}`;
+    return fechaHoraLocal(venta.created_at);
   }
 
   async confirmarEliminar(v: Venta, ev: Event): Promise<void> {

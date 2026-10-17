@@ -50,6 +50,9 @@ export class CompraService {
     const detalles = await this.sqlite.getCompraDetalle(compraId);
     const pares = await this.lotesDeDetalles(detalles);
     await this.revertirInventario(compraId, pares);
+    // Retira los detalles originales antes de registrar las nuevas líneas;
+    // sin esto cada producto quedaría duplicado en el detalle de la compra.
+    await this.sqlite.eliminarCompraDetalles(compraId);
     const total = await this.registrarLineas(compraId, lineas);
     await this.sqlite.updateCompra(compraId, proveedorId, total);
     await this.sincronizarCuentaPagar(compraId, proveedorId, total, esCredito);

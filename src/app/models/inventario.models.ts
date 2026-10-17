@@ -170,6 +170,17 @@ export interface AbonoPagar {
   created_at?: string;
 }
 
+/** Base de caja entregada para operar el día (vueltos): en efectivo y en cuenta. */
+export interface BaseCaja {
+  id?: number;
+  fecha: string;
+  base_efectivo: number;
+  base_cuenta: number;
+  usuario_nombre?: string | null;
+  usuario_id?: number | null;
+  created_at?: string;
+}
+
 export type TipoMovimiento = 'entrada' | 'salida' | 'ajuste';
 
 export type RolUsuario = 'admin' | 'operador';

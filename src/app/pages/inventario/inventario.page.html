@@ -55,7 +55,7 @@
                     <span [class.entrada]="m.tipo === 'entrada'" [class.salida]="m.tipo === 'salida'">
                       {{ m.tipo === 'entrada' ? '+' : '-' }}{{ m.cantidad }}
                     </span>
-                    <span class="motivo">{{ m.motivo }} · {{ m.created_at?.slice(0, 10) }}</span>
+                    <span class="motivo">{{ m.motivo }} · {{ fechaLocalIso(m.created_at) }}</span>
                     @if (esAdmin() && esAjuste(m)) {
                       <ion-button fill="clear" size="small" color="danger" (click)="confirmarEliminarAjuste(p, m, $event)" aria-label="Eliminar ajuste">
                         <ion-icon slot="icon-only" name="trash"></ion-icon>

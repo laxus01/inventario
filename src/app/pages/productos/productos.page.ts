@@ -341,7 +341,7 @@ export class ProductosPage {
       await this.toast.exito('Producto eliminado');
     } else {
       await this.toast.error(
-        'No se puede eliminar: el producto tiene compras, ventas o movimientos relacionados.',
+        'No se puede eliminar: el producto tiene compras o ventas activas (no anuladas).',
       );
     }
   }
